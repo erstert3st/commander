@@ -27,7 +27,10 @@ __plugin_description__ = "A quick \"Hello World\" example plugin for OctoPrint"
 def __plugin_load__():
     global _plugin
     global __plugin_hooks__
-
+    global gFileNameDict 
+    global gCounter
+    gFileNameDict = dict()
+    gCounter = 1
     global __plugin_implementation__
     __plugin_implementation__ = HelloWorldPlugin()
     
@@ -51,7 +54,7 @@ class HelloWorldPlugin(octoprint.plugin.StartupPlugin,
         # write to File -> check c:
         # make own Gcommands -> donne 
         # get all with Foldercrap -.- check origin codde
-        # Bad Info aufbohren for list Files Funcion -> FUUUUUUUUUUUUUUUUUUUUUUUUUUUCK
+        # Bad Info aufbohren for list Files Funcion -> FUUUUUUUUUUUUUUUUUUUUUUUUUUUCK DONE
         # make file with own Gcode -> add to File  -> done 
                                     # let octoPrint print files -> done
                                     # add update for bugs 
@@ -63,7 +66,7 @@ class HelloWorldPlugin(octoprint.plugin.StartupPlugin,
             # rename
             # delete
             # uploud
-            # folder FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUuCK
+            # folder FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUuCK 
         # Send Map 
 
 
@@ -111,42 +114,34 @@ class HelloWorldPlugin(octoprint.plugin.StartupPlugin,
                 except:
                     print("Something else went wrong") 
                 #self._printer.start_print()
-    def addToDict(self,Dict,node,counter):
-        Dict['file' + str(counter)] = {'filename': node['name'], 'path': node['path'] , 'icon': 'shouldbeimplemented'}
-        counter = counter + 1
-    
-    def isDict(self, node):
-        for childNode in node.items():
-            if childNode["type"] == "folder":
 
-    def isDict(self, node):
-        #check how origin is made 
+    
+    def checkDict(self, dict):
+        for key, subNode in dict.items():
+            if subNode["type"] == "folder":
+                self.checkDict(subNode["children"])
+            else:
+                self.addToDict(subNode)
 
     def getLocalFilesDict(self): # add Filter or mapping 
+        global  gFileNameDict
         files = (self._file_manager.list_files(FileDestinations.LOCAL, recursive=True, force_refresh=True))['local']
         #filenames = dictFilenames() ## should remove dict
         self._logger.info(files)
         #self._logger.info(fileNameList)
-        fileNameDict = dict(file0 = {'filename': 'examplename', 'path': 'some_folder/some_file.gcode', 'icon': 'shouldbeimplemented'})
-        counter = 1        
-        for key, node in files.items():
-            if node["type"] == "folder":
-                tempdict = 
-                
-                
-                for key, childNode in node["children"].items():
-                    
-                    
-                    #self.addToDict(dict = fileNameDict, node=childNode, counter=counter)
-                    #fileNameDict['file' + str(counter)] = {'filename': childNode['name'], 'path': childNode['path'] , 'icon': 'shouldbeimplemented'}
-                    #counter = counter + 1
-            else:
-                #self.addToDict(dict = fileNameDict, node=childNode, counter=counter)
-                fileNameDict['file' + str(counter)] = {'filename': node['name'], 'path': node['path'] , 'icon': 'shouldbeimplemented'}
-                counter = counter + 1
-        fileNameDict.pop('file0')
-        self._logger.info(fileNameDict)
-        return fileNameDict
+        gFileNameDict['file0'] = {'filename': 'examplename', 'path': 'some_folder/some_file.gcode', 'icon': 'shouldbeimplemented'}
+        self.checkDict(files)
+        gFileNameDict.pop('file0')
+        self._logger.info(gFileNameDict)
+        return gFileNameDict
+
+    def addToDict(self,node):
+        global gCounter
+        global  gFileNameDict
+        test = str(gCounter)
+        gFileNameDict['file' + test] = {'filename': node['name'], 'path': node['path'] , 'icon': 'shouldbeimplemented'}
+        #gFileNameDict['file' + str(gCounter)] = {'filename': node['name'], 'path': node['path'] , 'icon': 'shouldbeimplemented'}
+        gCounter = gCounter + 1  
             
     def on_after_startup(self):
         
@@ -182,7 +177,7 @@ class HelloWorldPlugin(octoprint.plugin.StartupPlugin,
             if not Filemanager.file_exists(pathWithFile):
                 Filemanager.add_file(pathWithFile, file_object=file_obj,  allow_overwrite=False, display=None)
                 file = open(pathWithFile, "w")
-                file.write("M118 A1 action:startPrintFromOctoPrint " + fileName + ", Path:")
+                file.write("M118 A1 action:startPrintFromOctoPrint '" + fItem['path']+ "'")
                 file.close()
                 print('\x1b[6;30;42m' + fId + ' wrote'+ '\x1b[0m')
             # add config Folder to fileName HERE !    
